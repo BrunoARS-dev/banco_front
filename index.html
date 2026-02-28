@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body>
+
+  <div class="layout">
+    
+<aside class="sidebar">
+  <div class="sidebar-top">
+    <div class="logo-container">
+      <i data-lucide="landmark"></i>
+      <span class="logo-text">Banco Digital</span>
+    </div>
+  </div>
+
+<nav class="menu">
+  <a href="#dashboard">
+    <i data-lucide="layout-dashboard"></i>
+    <span class="text">Dashboard</span>
+  </a>
+
+ <a href="#transferencia">
+    <i data-lucide="arrow-left-right"></i>
+    <span class="text">Transferência</span>
+  </a>
+</nav>
+</aside>
+<main class="content">
+    <div id="app"></div>    
+</main>
+
+</div>
+
+<script type="module" src="js/main.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+  lucide.createIcons();
+</script>
+
+</body>
+</html>
