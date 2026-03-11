@@ -33,3 +33,37 @@ export async function transferir(dados) {
 
   if (!response.ok) throw new Error("Erro na transferência");
 }
+
+export async function deletarConta(numero) {
+  const response = await fetch(`${API_URL}/contas/${numero}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    throw new Error("Erro ao deletar conta");
+  }
+}
+
+export async function depositar(numero, valor) {
+  const response = await fetch(`${API_URL}/contas/${numero}/depositar`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ valor }),
+  });
+
+  if (!response.ok) throw new Error("Erro ao depositar");
+}
+
+export async function sacar(numero, valor) {
+  const response = await fetch(`${API_URL}/contas/${numero}/sacar`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ valor }),
+  });
+
+  if (!response.ok) throw new Error("Erro ao sacar");
+}

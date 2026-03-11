@@ -1,4 +1,10 @@
-import { listarContas, criarConta } from "./api.js";
+import {
+  listarContas,
+  criarConta,
+  deletarConta,
+  depositar,
+  sacar
+} from "./api.js";
 
 let contas = [];
 let paginaAtual = 1;
@@ -15,14 +21,19 @@ export async function renderDashboard(app) {
     <div class="card">
       <div class="card-header">
         <h3>Contas</h3>
-        <button id="btnToggleForm">Nova Conta</button>
+        <button id="btnNovaConta">Nova Conta</button>
       </div>
 
       <form id="formConta" class="form hidden">
-        <input type="text" id="numero" placeholder="Número da Conta" required />
-        <p class="erro" id="erroNumero"></p>
-        <input type="number" id="saldo" placeholder="Saldo Inicial" required />
-        <button type="submit">Criar</button>
+        <div class="form-row">
+          <input type="text" id="numero" placeholder="Número da Conta" required />
+          <input type="number" id="saldo" placeholder="Saldo Inicial" required />
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" id="btnCriarConta">Criar</button>
+          <button type="button" id="btnCancelar" class="btn-secondary">Cancelar</button>
+        </div>
       </form>
 
       <div id="tabelaContainer"></div>
@@ -41,25 +52,31 @@ async function carregar() {
 
 function configurarEventos() {
   const form = document.getElementById("formConta");
-  const btnToggle = document.getElementById("btnToggleForm");
+  const btnNova = document.getElementById("btnNovaConta");
+  const btnCancelar = document.getElementById("btnCancelar");
+
   const numeroInput = document.getElementById("numero");
   const saldoInput = document.getElementById("saldo");
-  const erroNumero = document.getElementById("erroNumero");
 
-  let mostrarForm = false;
-
-  btnToggle.addEventListener("click", () => {
-    mostrarForm = !mostrarForm;
-    form.classList.toggle("hidden");
-    btnToggle.textContent = mostrarForm ? "Cancelar" : "Nova Conta";
+  // Abrir formulário
+  btnNova.addEventListener("click", () => {
+    form.classList.remove("hidden");
+    btnNova.classList.add("hidden"); // esconde botão antigo
   });
 
+  // Cancelar pelo botão interno
+  btnCancelar.addEventListener("click", () => {
+    form.classList.add("hidden");
+    form.reset();
+    btnNova.classList.remove("hidden"); // volta botão antigo
+  });
+
+  // Criar conta
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     if (!/^\d{5,}$/.test(numeroInput.value)) {
-      erroNumero.textContent =
-        "Número da conta deve ter no mínimo 5 dígitos.";
+      alert("Número da conta deve ter no mínimo 5 dígitos.");
       return;
     }
 
@@ -70,6 +87,9 @@ function configurarEventos() {
     });
 
     form.reset();
+    form.classList.add("hidden");
+    btnNova.classList.remove("hidden");
+
     await carregar();
   });
 }
@@ -117,32 +137,35 @@ function renderTabela() {
   }
 
   const totalPaginas = Math.ceil(contas.length / itensPorPagina);
-
   const inicio = (paginaAtual - 1) * itensPorPagina;
   const fim = inicio + itensPorPagina;
   const contasPaginadas = contas.slice(inicio, fim);
 
   tabelaContainer.innerHTML = `
-    <div class="table-wrapper">
+    <div class="table-wrapper" id="tableWrapper">
       <table class="modern-table">
         <thead>
           <tr>
-            <th>Número da Conta</th>
+            <th>Número</th>
             <th>Saldo</th>
+            <th>Ações</th>
           </tr>
         </thead>
         <tbody>
           ${contasPaginadas.map(c => `
             <tr>
-              <td>
-                <span class="account-number">#${c.numero}</span>
-              </td>
-              <td>
-                <span class="saldo-badge ${
-                  c.saldo >= 0 ? "positivo" : "negativo"
-                }">
-                  R$ ${c.saldo.toFixed(2)}
-                </span>
+              <td>#${c.numero}</td>
+              <td>R$ ${c.saldo.toFixed(2)}</td>
+              <td class="acoes">
+                <button class="btn-depositar" data-id="${c.numero}">
+                  Depositar
+                </button>
+                <button class="btn-sacar" data-id="${c.numero}">
+                  Sacar
+                </button>
+                <button class="btn-delete" data-id="${c.numero}">
+                  Excluir
+                </button>
               </td>
             </tr>
           `).join("")}
@@ -163,7 +186,6 @@ function renderTabela() {
     </div>
   `;
 
-  // 🔥 EVENTOS DEVEM VIR AQUI DENTRO
   document.getElementById("prev").onclick = () => {
     if (paginaAtual > 1) {
       paginaAtual--;
@@ -177,4 +199,45 @@ function renderTabela() {
       renderTabela();
     }
   };
+
+  const wrapper = document.getElementById("tableWrapper");
+
+  wrapper.onclick = async (e) => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+
+    const numero = Number(btn.dataset.id);
+    if (!numero) return;
+
+    try {
+      if (btn.classList.contains("btn-delete")) {
+        if (!confirm(`Excluir conta #${numero}?`)) return;
+        await deletarConta(numero);
+      }
+
+      if (btn.classList.contains("btn-depositar")) {
+        const valor = Number(prompt("Valor para depósito:"));
+        if (!valor || valor <= 0) return;
+        await depositar(numero, valor);
+      }
+
+      if (btn.classList.contains("btn-sacar")) {
+        const valor = Number(prompt("Valor para saque:"));
+        if (!valor || valor <= 0) return;
+        await sacar(numero, valor);
+      }
+
+      await carregar();
+    } catch (error) {
+      console.error(error);
+      alert("Erro na operação.");
+    }
+  };
+}
+
+function gerarProximoNumero() {
+  if (!contas.length) return 100000; // primeiro padrão
+
+  const maior = Math.max(...contas.map(c => c.numero));
+  return maior + 1;
 }
