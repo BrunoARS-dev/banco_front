@@ -10,6 +10,21 @@ let contas = [];
 let paginaAtual = 1;
 const itensPorPagina = 5;
 
+function mostrarLoading() {
+  const container = document.getElementById("tabelaContainer");
+
+  container.innerHTML = `
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>
+        Conectando com a API...<br>
+        A primeira requisição pode demorar alguns segundos
+        pois o servidor gratuito entra em modo de espera.
+      </p>
+    </div>
+  `;
+}
+
 export async function renderDashboard(app) {
   app.innerHTML = `
     <header class="topbar">
@@ -45,6 +60,7 @@ export async function renderDashboard(app) {
 }
 
 async function carregar() {
+  mostrarLoading(); 
   contas = await listarContas();
   renderMetrics();
   renderTabela();
