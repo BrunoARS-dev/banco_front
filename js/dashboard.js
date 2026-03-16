@@ -19,7 +19,7 @@ function mostrarLoading() {
       <p>
         Conectando com a API...<br>
         A primeira requisição pode demorar alguns segundos
-        pois o servidor gratuito entra em modo de espera.
+        pois o servidor entra em modo de espera.
       </p>
     </div>
   `;
